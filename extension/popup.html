@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LinguistAI</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; width: 320px; margin: 0; background: #f8fafc; color: #1e293b; }
+    .container { padding: 20px; }
+    .header { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .logo { width: 36px; height: 36px; border-radius: 8px; background: linear-gradient(135deg, #6366f1, #8b5cf6); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 18px; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35); }
+    .title { font-size: 20px; font-weight: 700; }
+    .card { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: white; border-radius: 12px; border: 1px solid #f1f5f9; margin-bottom: 16px; }
+    .card-label { font-size: 14px; font-weight: 500; color: #475569; }
+    .toggle-wrap { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    .toggle { position: relative; width: 44px; height: 24px; background: #e2e8f0; border-radius: 12px; transition: background 0.2s; }
+    .toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; background: white; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: transform 0.2s; }
+    #toggle { display: none; }
+    #toggle:checked + .toggle { background: #6366f1; }
+    #toggle:checked + .toggle::after { transform: translateX(20px); }
+    .stats { padding: 16px 20px; background: linear-gradient(135deg, #eef2ff, #f5f3ff); border-radius: 12px; border: 1px solid #e0e7ff; }
+    .stats-row { display: flex; align-items: center; justify-content: space-between; }
+    .stats-label { font-size: 14px; font-weight: 500; color: #475569; }
+    .stats-value { font-size: 24px; font-weight: 700; color: #4f46e5; }
+    .stats-hint { font-size: 12px; color: #64748b; margin-top: 4px; }
+    .footer { text-align: center; font-size: 12px; color: #94a3b8; margin-top: 16px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">L</div>
+      <h1 class="title">LinguistAI</h1>
+    </div>
+    <div class="card">
+      <span class="card-label">Extension</span>
+      <label class="toggle-wrap">
+        <input type="checkbox" id="toggle" checked>
+        <span class="toggle"></span>
+        <span id="toggleLabel">ON</span>
+      </label>
+    </div>
+    <div class="stats">
+      <div class="stats-row">
+        <span class="stats-label">Total Corrections</span>
+        <span id="totalCorrections" class="stats-value">0</span>
+      </div>
+      <p class="stats-hint">Grammatical fixes accepted</p>
+    </div>
+    <p class="footer">Hover over underlined text to see suggestions</p>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+/* LinguistAI - Injected styles for underlined errors */
+/* Main underline styling - tooltip uses Shadow DOM */
+
+.linguist-ai-error {
+  position: relative;
+  border-bottom: 2px wavy red;
+  cursor: pointer;
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+.linguist-ai-error:hover {
+  background-color: rgba(239, 68, 68, 0.15);
+}
+
+.linguist-ai-textarea-mirror .linguist-ai-error {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.linguist-ai-textarea-mirror {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.linguist-ai-textarea-mirror::-webkit-scrollbar {
+  display: none;
+}
