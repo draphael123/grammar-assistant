@@ -1,0 +1,10 @@
+{
+  "name": "grammar-assistant",
+  "version": "1.0.0",
+  "scripts": {
+    "zip": "node scripts/zip.js"
+  },
+  "devDependencies": {
+    "archiver": "^7.0.0"
+  }
+}

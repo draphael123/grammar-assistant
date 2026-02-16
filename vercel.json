@@ -1,4 +1,5 @@
 {
+  "buildCommand": "npm install && npm run zip",
   "rewrites": [
     { "source": "/", "destination": "/landing/index.html" }
   ]

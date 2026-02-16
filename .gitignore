@@ -1,4 +1,5 @@
 node_modules/
+extension.zip
 .vercel
 .env
 .env.local

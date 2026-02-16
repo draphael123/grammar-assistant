@@ -12,10 +12,16 @@ A Chrome Extension (Manifest V3) that checks grammar and spelling in real-time a
 
 ## Installation
 
+**Option A — Download from the website**  
+Visit the landing page and click **Add to Chrome** or **Download LinguistAI.zip**. Extract the zip, then:
+
 1. Open Chrome and go to `chrome://extensions`
 2. Enable **Developer mode** (top-right toggle)
-3. Click **Load unpacked**
-4. Select the `extension` folder
+3. Click **Load unpacked** and select the extracted folder
+
+**Option B — From source**  
+1. Clone the repo and run `npm run zip` to create `extension.zip`, or use the `extension` folder directly
+2. Open Chrome → `chrome://extensions` → Enable Developer mode → Load unpacked → Select the `extension` folder
 
 ## Project Structure
 
