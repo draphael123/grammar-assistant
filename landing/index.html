@@ -135,7 +135,7 @@
     <div class="container">
       <h2>See it in action</h2>
       <div class="demo-box">
-        <p style="margin-bottom: 12px; color: var(--text-muted); font-size: 14px;">Type in the box below. Try <strong style="color: var(--text);">teh</strong>, <strong style="color: var(--text);">recieve</strong>, or <strong style="color: var(--text);">definately</strong> — hover over red underlines for suggestions.</p>
+        <p style="margin-bottom: 12px; color: var(--text-muted); font-size: 14px;">No extension or API needed — just type below. Try <strong style="color: var(--text);">teh</strong>, <strong style="color: var(--text);">recieve</strong>, or <strong style="color: var(--text);">definately</strong>. Hover over red underlines for suggestions.</p>
         <div id="demoEditor" class="demo-editor" contenteditable="true" data-placeholder="Type here... e.g. 'teh quick brown fox' or 'I definately recieved the package'"></div>
       </div>
     </div>
@@ -233,11 +233,12 @@
         document.body.appendChild(host);
       }
       const editor = document.getElementById('demoEditor');
+      if (!editor) return;
       let debounce;
       function runCheck() {
         clearTimeout(debounce);
         debounce = setTimeout(async () => {
-          const text = editor.innerText || '';
+          const text = (editor.innerText || editor.textContent || '').replace(/\u00a0/g, ' ');
           editor.querySelectorAll('.demo-error').forEach(s => {
             const p = s.parentNode; while (s.firstChild) p.insertBefore(s.firstChild, s); p.replaceChild(document.createTextNode(s.textContent), s);
           });
@@ -246,16 +247,22 @@
           corrections.sort((a,b) => b.startIndex - a.startIndex).forEach(c => {
             const { startNode, startOffset, endNode, endOffset } = getRangeAtOffsets(editor, c.startIndex, c.endIndex);
             if (!startNode) return;
-            const r = document.createRange(); r.setStart(startNode, startOffset); r.setEnd(endNode, endOffset);
-            const span = document.createElement('span'); span.className = 'demo-error';
-            try { r.surroundContents(span); } catch(_) {}
-            span.onmouseenter = () => showTooltip(c, span.getBoundingClientRect(), () => {
-              span.textContent = c.suggestion; span.classList.remove('demo-error'); span.replaceWith(document.createTextNode(c.suggestion));
-            });
+            const r = document.createRange();
+            try {
+              r.setStart(startNode, Math.min(startOffset, startNode.textContent.length));
+              r.setEnd(endNode, Math.min(endOffset, endNode.textContent.length));
+              if (r.collapsed) return;
+              const span = document.createElement('span'); span.className = 'demo-error';
+              r.surroundContents(span);
+              span.onmouseenter = () => showTooltip(c, span.getBoundingClientRect(), () => {
+                span.replaceWith(document.createTextNode(c.suggestion));
+              });
+            } catch(_) {}
           });
-        }, 400);
+        }, 350);
       }
       editor.addEventListener('input', runCheck);
+      editor.addEventListener('keyup', runCheck);
       editor.addEventListener('paste', e => { e.preventDefault(); document.execCommand('insertText', false, e.clipboardData.getData('text/plain')); runCheck(); });
     })();
   </script>
