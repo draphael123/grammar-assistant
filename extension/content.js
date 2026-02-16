@@ -177,7 +177,6 @@
       white-space: pre-wrap;
       word-wrap: break-word;
       overflow: hidden;
-      color: #333;
       pointer-events: none; /* Spans override with pointer-events: auto */
       box-sizing: border-box;
     `;
@@ -187,6 +186,7 @@
     mirror.style.fontSize = computed.fontSize;
     mirror.style.lineHeight = computed.lineHeight;
     mirror.style.padding = computed.padding;
+    mirror.style.color = computed.color;
 
     textarea.parentNode.insertBefore(wrapper, textarea);
     wrapper.appendChild(textarea);
@@ -204,6 +204,9 @@
 
     mirror.style.overflow = 'auto';
     textarea.addEventListener('scroll', () => { mirror.scrollTop = textarea.scrollTop; mirror.scrollLeft = textarea.scrollLeft; });
+
+    updateTextareaMirror(textarea, mirror, []);
+    textarea.addEventListener('input', () => { updateTextareaMirror(textarea, mirror, []); }, { passive: true });
 
     return mirror;
   }
@@ -234,10 +237,11 @@
 
   async function processTextarea(textarea) {
     const text = textarea.value;
-    if (!text.trim()) return;
-
-    const mirror = setupTextareaMirror(textarea) || textarea.parentElement.querySelector('.linguist-ai-textarea-mirror');
+    const mirror = textarea.closest('.linguist-ai-textarea-wrapper')?.querySelector('.linguist-ai-textarea-mirror') || setupTextareaMirror(textarea);
     if (!mirror) return;
+    updateTextareaMirror(textarea, mirror, []);
+
+    if (!text.trim()) return;
 
     try {
       const corrections = await window.LinguistAPI.checkGrammar(text);
