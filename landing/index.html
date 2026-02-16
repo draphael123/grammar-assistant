@@ -91,7 +91,19 @@
       border-radius: 8px; color: var(--text); font-family: inherit;
       font-size: 15px; resize: vertical;
     }
-    .demo-box textarea::placeholder { color: var(--text-muted); }
+    .demo-box .demo-editor {
+      min-height: 140px; padding: 16px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); font-family: inherit;
+      font-size: 15px; line-height: 1.6; outline: none;
+    }
+    .demo-box .demo-editor:empty::before { content: attr(data-placeholder); color: var(--text-muted); }
+    .demo-box .demo-error {
+      border-bottom: 2px wavy #ef4444;
+      background: rgba(239, 68, 68, 0.1);
+      cursor: pointer;
+    }
+    .demo-box .demo-error:hover { background: rgba(239, 68, 68, 0.2); }
     footer {
       padding: 48px 0; border-top: 1px solid var(--border);
       text-align: center; color: var(--text-muted); font-size: 14px;
@@ -109,12 +121,25 @@
       </div>
       <h1>Grammar & spelling, as you type</h1>
       <p class="subtitle">LinguistAI underlines potential errors in real-time. Hover to see suggestions and fix with one click. Works everywhere you write.</p>
-      <a href="#install" class="cta">
-        Add to Chrome
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-      </a>
+      <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <a href="#demo" class="cta">
+          Try it now
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </a>
+        <a href="#install" style="display: inline-flex; align-items: center; padding: 14px 24px; border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-weight: 600; text-decoration: none; transition: border-color 0.2s, background 0.2s;" onmouseover="this.style.borderColor='var(--accent)';this.style.background='var(--surface)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='transparent'">Get the extension</a>
+      </div>
     </div>
   </header>
+
+  <section id="demo">
+    <div class="container">
+      <h2>See it in action</h2>
+      <div class="demo-box">
+        <p style="margin-bottom: 12px; color: var(--text-muted); font-size: 14px;">Type in the box below. Try <strong style="color: var(--text);">teh</strong>, <strong style="color: var(--text);">recieve</strong>, or <strong style="color: var(--text);">definately</strong> — hover over red underlines for suggestions.</p>
+        <div id="demoEditor" class="demo-editor" contenteditable="true" data-placeholder="Type here... e.g. 'teh quick brown fox' or 'I definately recieved the package'"></div>
+      </div>
+    </div>
+  </section>
 
   <section id="features">
     <div class="container">
@@ -160,16 +185,80 @@
     </div>
   </section>
 
-  <section>
-    <div class="container">
-      <h2>Try it</h2>
-      <div class="demo-box">
-        <p style="margin-bottom: 12px; color: var(--text-muted); font-size: 14px;">Install the extension, then type in the box below. Try phrases like "teh cat" or "recieve" to see mock corrections.</p>
-        <textarea placeholder="Type here... e.g. 'teh quick brown fox' or 'I definately recieved the package'" id="demoInput"></textarea>
-      </div>
-    </div>
-  </section>
-
+  <script>
+    (function() {
+      const MOCK_PATTERNS = [
+        { pattern: /\bteh\b/gi, suggestion: 'the', explanation: 'Common typo: "teh" should be "the"' },
+        { pattern: /\brecieve\b/gi, suggestion: 'receive', explanation: 'Spelling: "i before e except after c"' },
+        { pattern: /\boccured\b/gi, suggestion: 'occurred', explanation: 'Double "r" needed in past tense of "occur"' },
+        { pattern: /\bdefinately\b/gi, suggestion: 'definitely', explanation: 'Spelling: "definitely" has no "a"' },
+        { pattern: /\bseperate\b/gi, suggestion: 'separate', explanation: '"Separate" is spelled with "a" not "e"' },
+        { pattern: /\baccomodate\b/gi, suggestion: 'accommodate', explanation: 'Double "m" and double "d" in accommodate' },
+      ];
+      async function checkGrammar(text) {
+        await new Promise(r => setTimeout(r, 300));
+        const corrections = [];
+        MOCK_PATTERNS.forEach(({ pattern, suggestion, explanation }) => {
+          let m;
+          const re = new RegExp(pattern.source, 'gi');
+          while ((m = re.exec(text)) !== null) {
+            corrections.push({ original: m[0], suggestion, explanation, startIndex: m.index, endIndex: m.index + m[0].length });
+          }
+        });
+        return corrections;
+      }
+      function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+      function getRangeAtOffsets(root, startIdx, endIdx) {
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        let current = 0; let startNode = null, startOffset = 0, endNode = null, endOffset = 0, node;
+        while ((node = walker.nextNode())) {
+          const len = node.textContent.length;
+          if (!startNode && current + len > startIdx) { startNode = node; startOffset = startIdx - current; }
+          if (!endNode && current + len >= endIdx) { endNode = node; endOffset = endIdx - current; break; }
+          current += len;
+        }
+        return { startNode, startOffset, endNode: endNode || startNode, endOffset: endNode ? endOffset : startOffset };
+      }
+      function showTooltip(correction, rect, onAccept) {
+        const host = document.createElement('div');
+        const shadow = host.attachShadow({ mode: 'open' });
+        shadow.innerHTML = '<style>.t{position:fixed;z-index:99999;background:#1f2937;color:#f9fafb;padding:12px 16px;border-radius:8px;box-shadow:0 10px 25px rgba(0,0,0,0.4);font-family:system-ui;font-size:13px;max-width:280px}.s{color:#34d399;font-weight:600;margin:4px 0}.e{color:#9ca3af;font-size:12px;margin-bottom:10px}.b{background:#3b82f6;color:white;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px}.b:hover{background:#2563eb}</style><div class="t"><div class="s">→ '+escapeHtml(correction.suggestion)+'</div><div class="e">'+escapeHtml(correction.explanation)+'</div><button class="b">Accept</button></div>';
+        const btn = shadow.querySelector('button');
+        btn.onclick = () => { onAccept(); host.remove(); };
+        let left = rect.left + rect.width/2 - 140, top = rect.top - 8;
+        if (top < 10) top = rect.bottom + 8;
+        if (left < 10) left = 10;
+        if (left > window.innerWidth - 290) left = window.innerWidth - 290;
+        shadow.querySelector('.t').style.cssText = 'left:'+left+'px;top:'+top+'px;transform:translateY(-100%)';
+        document.body.appendChild(host);
+      }
+      const editor = document.getElementById('demoEditor');
+      let debounce;
+      function runCheck() {
+        clearTimeout(debounce);
+        debounce = setTimeout(async () => {
+          const text = editor.innerText || '';
+          editor.querySelectorAll('.demo-error').forEach(s => {
+            const p = s.parentNode; while (s.firstChild) p.insertBefore(s.firstChild, s); p.replaceChild(document.createTextNode(s.textContent), s);
+          });
+          if (!text.trim()) return;
+          const corrections = await checkGrammar(text);
+          corrections.sort((a,b) => b.startIndex - a.startIndex).forEach(c => {
+            const { startNode, startOffset, endNode, endOffset } = getRangeAtOffsets(editor, c.startIndex, c.endIndex);
+            if (!startNode) return;
+            const r = document.createRange(); r.setStart(startNode, startOffset); r.setEnd(endNode, endOffset);
+            const span = document.createElement('span'); span.className = 'demo-error';
+            try { r.surroundContents(span); } catch(_) {}
+            span.onmouseenter = () => showTooltip(c, span.getBoundingClientRect(), () => {
+              span.textContent = c.suggestion; span.classList.remove('demo-error'); span.replaceWith(document.createTextNode(c.suggestion));
+            });
+          });
+        }, 400);
+      }
+      editor.addEventListener('input', runCheck);
+      editor.addEventListener('paste', e => { e.preventDefault(); document.execCommand('insertText', false, e.clipboardData.getData('text/plain')); runCheck(); });
+    })();
+  </script>
   <footer>
     <div class="container">
       <p>LinguistAI uses a mock API by default. Replace <code>api.js</code> with your own LLM integration (OpenAI, Gemini, etc.) for production use.</p>
